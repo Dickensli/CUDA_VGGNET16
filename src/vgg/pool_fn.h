@@ -95,18 +95,17 @@ __global__ void pool_2(float* in, float* out,  uint32_t lrow, uint32_t lcol){
 */
 __global__ void fn(float* in, float* out, float* kernel_weights, float* kernel_bias, uint32_t lrow, uint32_t lcol){
     uint32_t gid = blockIdx.x * blockDim.x + threadIdx.x;
-    uint32_t lid = threadIdx.x;
+    double val = 0;
 
     if(gid >= lrow)
         return;
-
-    extern __shared__ float sout[];
-    sout[lid] = 0;
     for(uint32_t iter = 0 ; iter < lcol ; iter++){
-        sout[lid] += kernel_weights[lrow * iter + gid] * in[iter];
+        val += double(kernel_weights[iter + gid * lcol]) * double(in[iter]);
     }
-    sout[lid] += kernel_bias[gid];
-    out[gid] = sout[lid];
+    val += kernel_bias[gid];
+    if(val < 0)
+        val = 0;
+    out[gid] = (float)val;
 }
 
 /*

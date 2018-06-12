@@ -12,7 +12,7 @@ void AssignRandomValue(float *res, int size, bool randomFlag = true){
     }
 }
 
-void InitWeights_Biases(double *Weights_CPU, int size, char* file_path) {
+void InitWeights_Biases(float *Weights_CPU, int size, char* file_path) {
 	//Layer Weights
 	FILE * pFile = fopen (file_path,"r");
 	if (!pFile) {
@@ -26,7 +26,7 @@ void InitWeights_Biases(double *Weights_CPU, int size, char* file_path) {
 		char *line = NULL;
 		while ((getline(&line, &len, pFile)) != -1) {
 			double temp_num = atof(line);
-			Weights_CPU[i] = temp_num;
+			Weights_CPU[i] = (float)temp_num;
 			i++;
 			if(i==size) {
 				break;
@@ -36,7 +36,7 @@ void InitWeights_Biases(double *Weights_CPU, int size, char* file_path) {
 	}
 }
 
-void LoadInput(double *Data_Layer_CPU,char* file_path) {
+void LoadInput(float *Data_Layer_CPU, char* file_path) {
 	FILE * pFile = fopen (file_path,"rb");
 	if (!pFile) {
 		printf("FAIL! INPUT FILE NOT FOUND!\n");
@@ -48,7 +48,7 @@ void LoadInput(double *Data_Layer_CPU,char* file_path) {
 		char *line = NULL;
 		while ((getline(&line, &len, pFile)) != -1) {
 			double temp_num = atof(line);
-			Data_Layer_CPU[i] = temp_num;
+			Data_Layer_CPU[i] = (float)temp_num;
 			i++;
 			if(i==IMAGE_WIDTH*IMAGE_WIDTH*3) {
 				printf("compeleted reading img file\n");
@@ -59,16 +59,16 @@ void LoadInput(double *Data_Layer_CPU,char* file_path) {
 	}
 }
 
-void ConvertInput(double *Data_Layer_CPU)
+void ConvertInput(float *&Data_Layer_CPU)
 {
-    double *Data_layer_CPU_out = (double*) malloc (CHANNELS*IMAGE_WIDTH*IMAGE_WIDTH * sizeof(double));
+    float *Data_Layer_CPU_out = (float*) malloc (CHANNELS*IMAGE_WIDTH*IMAGE_WIDTH * sizeof(float));
 	for(int i=0; i<IMAGE_WIDTH*IMAGE_WIDTH*CHANNELS; i+=3)
 	{
 		Data_Layer_CPU_out[i/3] = Data_Layer_CPU[i];
 		Data_Layer_CPU_out[i/3 + IMAGE_WIDTH * IMAGE_WIDTH] = Data_Layer_CPU[i + 1];
 		Data_Layer_CPU_out[i/3 + 2 * IMAGE_WIDTH * IMAGE_WIDTH] = Data_Layer_CPU[i + 2];
 	}
-    Data_Layer_CPU = Data_layer_CPU_out;
+    Data_Layer_CPU = Data_Layer_CPU_out;
 }
 
 void LoadImageNetClass(char **image_class, char *file_path){

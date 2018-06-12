@@ -6,10 +6,10 @@
 #include <cmath>
 #include <time.h>
 
-#define PRED
+#define FN
 #ifdef POOL
-    #define MATROW (224)
-    #define MATCOL (224 * 64)
+    #define MATROW (14)
+    #define MATCOL (14 * 512)
     #define MATSIZE (MATROW * MATCOL)
 #endif
 #ifdef FN
@@ -24,13 +24,12 @@
 #endif
 
 #include "pool_fn.h"
-#include "utils.h"
 
 using namespace std;
 
 void pool_unitest(float *in, float *out, float * err, float * cpu_time);
 void fn_unitest(float *kernel_weights, float *kernel_bias, float *in, float * out, float * err, float * cpu_time);
-void AssignRandomValue(float *res, int size, bool randomFlag);
+void AssignRandomValue(float *res, int size, bool randomFlag = true);
 
 // pool_1<<<dim3(28, 8, 1), 32>>>(d_in, d_out, 224, 224 * 64);
 // pool_1<<<dim3(14, 8, 1), 32>>>(d_in, d_out, 112, 112 * 128);
@@ -44,9 +43,9 @@ void AssignRandomValue(float *res, int size, bool randomFlag);
 // pool_2<<<dim3(2, 2, 1), dim3(8, 8, 1)>>>(d_in, d_out, 28, 28 * 512);
 // pool_2<<<dim3(1, 1, 1), dim3(8, 8, 1)>>>(d_in, d_out, 14, 14 * 512);
 
-// fn<<<128, 32, 32 * sizeof(float)>>>(d_in, d_out, d_kernel_weights, d_kernel_bias, 4096, 7 * 7 * 512);
-// fn<<<128, 32, 32 * sizeof(float)>>>(d_in, d_out,d_kernel_weights, d_kernel_bias, 4096, 4096);
-// fn<<<32, 32, 32 * sizeof(float)>>>(d_in, d_out, d_kernel_weights, d_kernel_bias, 1000, 4096);
+// fn<<<128, 32>>>(d_in, d_out, d_kernel_weights, d_kernel_bias, 4096, 7 * 7 * 512);
+// fn<<<128, 32>>>(d_in, d_out,d_kernel_weights, d_kernel_bias, 4096, 4096);
+// fn<<<32, 32>>>(d_in, d_out, d_kernel_weights, d_kernel_bias, 1000, 4096);
 
 
 int main(int argc, char** argv) {
@@ -120,7 +119,7 @@ int main(int argc, char** argv) {
             cudaMemcpy(d_kernel_bias, kernel_bias, MATROW * sizeof(float), cudaMemcpyHostToDevice);
 
             cudaEventRecord(start_event, 0);
-            fn<<<ceil(MATROW/32), 32, 32 * sizeof(float)>>>(d_in, d_out, d_kernel_weights, d_kernel_bias, MATROW, MATCOL);
+            fn<<<ceil(MATROW/32), 32>>>(d_in, d_out, d_kernel_weights, d_kernel_bias, MATROW, MATCOL);
             CHECK(cudaGetLastError());
             cudaEventRecord(stop_event, 0);
             cudaEventSynchronize(stop_event);
@@ -214,9 +213,11 @@ void fn_unitest(float *kernel_weights, float *kernel_bias, float *in, float * ou
     const clock_t begin_time = clock();
     for(uint32_t i = 0 ; i < MATROW ; i++){
         for(uint32_t j = 0 ; j < MATCOL ; j++){
-            rei_out[i] += in[j] * kernel_weights[j * MATROW + i];
+            rei_out[i] += in[j] * kernel_weights[j + i * MATCOL];
         }
         rei_out[i] += kernel_bias[i];
+        if(rei_out[i] < 0)
+            rei_out[i] = 0;
     }
     *cpu_time = float( clock () - begin_time ) /  CLOCKS_PER_SEC * 1000;
     *err  = 0;
@@ -225,4 +226,14 @@ void fn_unitest(float *kernel_weights, float *kernel_bias, float *in, float * ou
     }
     free(rei_out);
     return;
+}
+
+void AssignRandomValue(float *res, int size, bool randomFlag){
+    for (int i = 0; i < size; i ++)
+    {
+        if (randomFlag)
+            res[i] = float(rand() % 20001) / 10000 - 1;
+        else
+            res[i] = 0;
+    }
 }
