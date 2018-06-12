@@ -23,32 +23,12 @@ __global__ void pool_1(float* in, float* out, uint32_t lrow, uint32_t lcol){
     for(uint32_t iter = 0 ; iter < in_size/onetime_vol ; iter++){
         uint32_t total_off_in = off_in + iter * onetime_vol;
         uint32_t total_off_out = off_out + iter * onetime_vol / 4;
-        float val = in[total_off_in + lrow * iwy + iwx];
-        // if(blockIdx.y == 0 && blockIdx.x == 0 && threadIdx.x == 0 && iter == 0){
-        //     printf("in[%d] = %f\n", total_off_in + lrow * iwy + iwx, in[total_off_in + lrow * iwy + iwx]);
-        // }
-        // if(blockIdx.y == 0 && blockIdx.x == 0 && threadIdx.x == 1 && iter == 0){
-        //     printf("in[%d] = %f\n", total_off_in + lrow * iwy + iwx, in[total_off_in + lrow * iwy + iwx]);
-        // }
-        // if(blockIdx.y == 0 && blockIdx.x == 0 && threadIdx.x == 8 && iter == 0){
-        //     printf("in[%d] = %f\n", total_off_in + lrow * iwy + iwx, in[total_off_in + lrow * iwy + iwx]);
-        // }
-        // if(blockIdx.y == 0 && blockIdx.x == 0 && threadIdx.x == 9 && iter == 0){
-        //     printf("in[%d] = %f\n", total_off_in + lrow * iwy + iwx, in[total_off_in + lrow * iwy + iwx]);
-        // }
-        
-
+        float val = in[total_off_in + lrow * iwy + iwx];  
         float pval = __shfl_down(val, 1);
         val = val > pval? val : pval;
         pval = __shfl_down(val, 8);
         if(!(iwx & 0x1) && !(iwy & 0x1)){
             out[total_off_out + lrow/2 * iwy/2 + iwx/2] = val > pval? val : pval;
-            // if(blockIdx.y == 0 && blockIdx.x == 0 && threadIdx.x == 0 && iter == 0){
-            //     printf("iwx = %d\n", iwx);
-            //     printf("iwy = %d\n", iwy);
-            //     printf("total_off_out = %d\n", total_off_out);
-            //     printf("out[%d] = %f\n", total_off_out + lrow/2 * iwy/2 + iwx/2, out[total_off_out + lrow/2 * iwy/2 + iwx/2]);
-            // }
         }
     }
 }
@@ -67,12 +47,6 @@ __global__ void pool_2(float* in, float* out,  uint32_t lrow, uint32_t lcol){
     uint32_t off_out = wy * lrow / 4 + wx / 2;  
     if( (blockIdx.x * blockDim.x + threadIdx.x)*2 >= lrow)
         return;
-    // if(blockIdx.y == 0 && blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0){
-    //     printf("in[%d] = %f\n", 0, in[0]);
-    //     printf("in[%d] = %f\n", 1, in[1]);
-    //     printf("in[%d] = %f\n", 224, in[224]);
-    //     printf("in[%d] = %f\n", 225, in[225]);
-    // }
 
     for(uint32_t iter = 0 ; iter < in_size/onetime_vol ; iter++){
         uint32_t total_off_in = off_in + iter * onetime_vol;
@@ -82,9 +56,6 @@ __global__ void pool_2(float* in, float* out,  uint32_t lrow, uint32_t lcol){
         float val3 = in[total_off_in + lrow];
         float val4 = in[total_off_in + lrow + 1];
         out[total_off_out] = max(max(max(val1, val2), val3), val4);
-        // if(blockIdx.y == 0 && blockIdx.x == 0 && threadIdx.x == 0 && threadIdx.y == 0 && iter == 0){
-        //     printf("out[%d] = %f\n", 0, out[0]);
-        // }
     }
 }
 
