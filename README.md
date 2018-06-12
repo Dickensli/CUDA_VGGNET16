@@ -1,6 +1,9 @@
 # CUDA_VGGNET16
 Implement VGGNet16 using cuda. Implement 4 conv kernels, 2 pool kernels.
 
+##Requirement
+Cuda-9.0, Cudnn-7.5, cuda-toolkit, nvcc
+
 ## Usage
 ### cmake
 Under `root` directory `cmake .` to add dependency and import NVTX and NVML.
